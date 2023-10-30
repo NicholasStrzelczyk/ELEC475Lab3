@@ -1,14 +1,12 @@
 import argparse
 import time
-from pathlib import Path
-
 import torch
-import torchvision
 import torchvision.transforms as transforms
 from matplotlib import pyplot as plt
 from torch import nn
 from torchvision.datasets import CIFAR100
 from torch.utils.data import DataLoader
+from pathlib import Path
 from datetime import datetime
 
 import quicknet
@@ -16,6 +14,7 @@ import quicknet
 
 def train_transform():
     transform_list = [
+        transforms.Resize((227, 227)),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ]

@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -38,14 +39,12 @@ class Architecture:
     )
     frontend = nn.Sequential(
         nn.Dropout(0.5),
-        nn.Linear(7 * 7 * 512, 4096),
+        nn.Linear(29*29*512, 4096),
         nn.ReLU(),
         nn.Dropout(0.5),
         nn.Linear(4096, 4096),
         nn.ReLU(),
-        nn.Dropout(0.5),
         nn.Linear(4096, 100),
-        nn.Softmax(), # idk about this one chief?!?
     )
 
 
@@ -68,4 +67,5 @@ class QuickNet(nn.Module):
             nn.init.normal_(param, mean=mean, std=std)
 
     def forward(self, x):
-        return self.frontend(self.backend(x))
+        encoded = self.backend(x)
+        return self.frontend(torch.flatten(encoded, 1))
