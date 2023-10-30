@@ -62,7 +62,6 @@ class QuickNet(nn.Module):
         if self.frontend is None:
             self.frontend = Architecture.frontend
             self.init_decoder_weights(mean=0.0, std=0.01)
-        self.mse_loss = nn.MSELoss()
 
     def init_decoder_weights(self, mean, std):
         for param in self.frontend.parameters():

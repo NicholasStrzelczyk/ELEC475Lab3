@@ -1,0 +1,1 @@
+python3 train.py -learn 1e-4 -gamma 5e-5 -e 20 -b 20 -cuda y
