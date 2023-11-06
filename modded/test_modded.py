@@ -29,7 +29,7 @@ def test_transform():
 
 if __name__ == '__main__':
 
-    device = 'cpu'
+    device = torch.device('cpu')
 
     # ----- set up argument parser for command line inputs ----- #
     parser = argparse.ArgumentParser()
@@ -45,30 +45,27 @@ if __name__ == '__main__':
     batch_size = int(args.b)
     use_cuda = str(args.cuda).lower()
 
+    print("CudaIsAvailable: {}, UseCuda: {}".format(torch.cuda.is_available(), use_cuda))
+    if torch.cuda.is_available() and use_cuda == 'y':
+        print('using cuda ...')
+        device = torch.device("cuda")
+    else:
+        print('using cpu ...')
+
     test_set = CIFAR100(root='../data', train=False, download=True, transform=test_transform())
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
 
     # ----- initialize model and training parameters ----- #
-    # encoder = quicknet_modded.Architecture.backend
-    # decoder = quicknet_modded.Architecture.frontend
-    # encoder.load_state_dict(torch.load(encoder_file, map_location='cpu'))
-    # decoder.load_state_dict(torch.load(decoder_file, map_location='cpu'))
-    # model = quicknet_modded.QuickNet(encoder, decoder)
-    model = quicknet_modded.QuickNet()
-    model.load_state_dict(torch.load('./modded.pth', map_location='cpu'))
-    model.eval()
-    model.to(device=torch.device('cpu'))
+    encoder = quicknet_modded.Architecture.backend
+    decoder = quicknet_modded.Architecture.frontend
+    encoder.load_state_dict(torch.load(encoder_file, map_location=device))
+    decoder.load_state_dict(torch.load(decoder_file, map_location=device))
+    model = quicknet_modded.QuickNetMod(encoder, decoder)
+    model.to(device=device)
     print('model loaded OK!')
 
-    print("CudaIsAvailable: {}, UseCuda: {}".format(torch.cuda.is_available(), use_cuda))
-    if torch.cuda.is_available() and use_cuda == 'y':
-        print('using cuda ...')
-        model.cuda()
-        device = torch.device('cuda')
-    else:
-        print('using cpu ...')
-
     # ----- begin testing the model ----- #
+    model.eval()
     with torch.no_grad():
         correct = 0
         total = 0

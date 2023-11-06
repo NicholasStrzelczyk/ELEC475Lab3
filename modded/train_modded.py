@@ -64,22 +64,21 @@ if __name__ == '__main__':
     data_length = len(train_set)
     n_batches = len(train_loader)
 
-    # ----- initialize model and training parameters ----- #
-    # encoder = quicknet_modded.Architecture.backend
-    # decoder = quicknet_modded.Architecture.frontend
-    # model = quicknet_modded.QuickNet(encoder, decoder)
-    model = quicknet_modded.QuickNet()
-    model.train()
-    model.to(device=torch.device('cpu'))
-    print('model loaded OK!')
-
     print("CudaIsAvailable: {}, UseCuda: {}".format(torch.cuda.is_available(), use_cuda))
     if torch.cuda.is_available() and use_cuda == 'y':
         print('using cuda ...')
-        model.cuda()
         device = torch.device('cuda')
     else:
         print('using cpu ...')
+
+    # ----- initialize model and training parameters ----- #
+    encoder = quicknet_modded.Architecture.backend
+    decoder = quicknet_modded.Architecture.frontend
+    encoder.to(device=device)
+    decoder.to(device=device)
+    model = quicknet_modded.QuickNetMod(encoder, decoder)
+    model.to(device=device)
+    print('model loaded OK!')
 
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learn, weight_decay=5e-5)
@@ -90,6 +89,7 @@ if __name__ == '__main__':
     acc_train = []
     acc_valid = []
     torchsummary.summary(model, input_size=(3, 224, 224))
+    model.train()
     print("{} training...".format(datetime.now()))
     start_time = time.time()
 
@@ -122,43 +122,42 @@ if __name__ == '__main__':
             epoch_loss / data_length,
             100 * correct_train / total_train))
 
-        # # Validation
-        # with torch.no_grad():
-        #     correct_valid = 0
-        #     total_valid = 0
-        #     top1s = 0
-        #     top5s = 0
-        #     for images, labels in valid_loader:
-        #         images = images.to(device=device)
-        #         labels = labels.to(device=device)
-        #         outputs = model(images)
-        #         _, predicted = torch.max(outputs.data, 1)
-        #         total_valid += labels.size(0)
-        #         correct_valid += (predicted == labels).sum().item()
-        #         top1s += find_top_k(outputs, labels, 1)
-        #         top5s += find_top_k(outputs, labels, 5)
-        #         del images, labels, outputs
-        #
-        # acc_valid.append(100 * correct_valid / total_valid)
-        # print('Validation accuracy: {}%, Top 1 error rate: {:.2f}%, Top 5 error rate: {:.2f}%'.format(
-        #     100 * correct_valid / total_valid,
-        #     100 * (1 - (top1s / total_valid)),
-        #     100 * (1 - (top5s / total_valid))))
+        # Validation
+        with torch.no_grad():
+            correct_valid = 0
+            total_valid = 0
+            top1s = 0
+            top5s = 0
+            for images, labels in valid_loader:
+                images = images.to(device=device)
+                labels = labels.to(device=device)
+                outputs = model(images)
+                _, predicted = torch.max(outputs.data, 1)
+                total_valid += labels.size(0)
+                correct_valid += (predicted == labels).sum().item()
+                top1s += find_top_k(outputs, labels, 1)
+                top5s += find_top_k(outputs, labels, 5)
+                del images, labels, outputs
+
+        acc_valid.append(100 * correct_valid / total_valid)
+        print('Validation accuracy: {}%, Top 1 error rate: {:.2f}%, Top 5 error rate: {:.2f}%'.format(
+            100 * correct_valid / total_valid,
+            100 * (1 - (top1s / total_valid)),
+            100 * (1 - (top5s / total_valid))))
 
     end_time = time.time()
 
     # # ----- print final training statistics ----- #
-    # hours, rem = divmod(end_time - start_time, 3600)
-    # minutes, seconds = divmod(rem, 60)
-    # total_time = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
-    # print("Total training time: {}, ".format(total_time))
-    # print("Final loss value: {}".format(loss_train[-1]))
-    # print("Best validation accuracy: {}% on epoch {}".format(max(acc_valid), acc_valid.index(max(acc_valid)) + 1))
+    hours, rem = divmod(end_time - start_time, 3600)
+    minutes, seconds = divmod(rem, 60)
+    total_time = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
+    print("Total training time: {}, ".format(total_time))
+    print("Final loss value: {}".format(loss_train[-1]))
+    print("Best validation accuracy: {}% on epoch {}".format(max(acc_valid), acc_valid.index(max(acc_valid)) + 1))
 
     # save the model weights
-    # torch.save(model.backend.state_dict(), encoder_file)
-    # torch.save(model.frontend.state_dict(), decoder_file)
-    torch.save(model.state_dict(), './modded.pth')
+    torch.save(model.backend.state_dict(), encoder_file)
+    torch.save(model.frontend.state_dict(), decoder_file)
 
     # save loss plot and accuracy plot
     plt.figure(figsize=(14, 6))
