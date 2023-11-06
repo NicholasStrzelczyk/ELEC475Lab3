@@ -1,1 +1,1 @@
-python3 train_vanilla.py -decoder_file ./decoder_vanilla.pth -plot_file ./plot_vanilla.png -learn 1e-4 -e 20 -b 50 -cuda y
+python3 train_vanilla.py -decoder_file ./decoder_vanilla.pth -plot_file ./plot_vanilla.png -learn 1e-4 -e 15 -b 25 -cuda y

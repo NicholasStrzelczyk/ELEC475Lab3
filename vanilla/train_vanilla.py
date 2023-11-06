@@ -83,27 +83,27 @@ if __name__ == '__main__':
 
     # ----- begin training the model ----- #
     loss_train = []
-    acc_valid = []
-    acc_train = []
+    top1_err_train = []
+    top5_err_train = []
     torchsummary.summary(model, input_size=(3, 32, 32))
+    model.train()
     print("{} training...".format(datetime.now()))
     start_time = time.time()
 
     for epoch in range(n_epochs):
         epoch_loss = 0.0
-        correct_train = 0
+        top1s_train = 0
+        top5s_train = 0
         total_train = 0
-
-        # Training
         for i, data in enumerate(train_loader, 0):
             inputs, labels = data
             inputs = inputs.to(device=device)
             labels = labels.to(device=device)
             optimizer.zero_grad()
             outputs = model(inputs)
-            _, predicted = torch.max(outputs.data, 1)
             total_train += labels.size(0)
-            correct_train += (predicted == labels).sum().item()
+            top1s_train += find_top_k(outputs, labels, 1).cpu().detach().numpy()
+            top5s_train += find_top_k(outputs, labels, 5).cpu().detach().numpy()
             loss = loss_fn(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -111,48 +111,48 @@ if __name__ == '__main__':
 
         scheduler.step(epoch_loss)
         loss_train.append(epoch_loss / data_length)
-        acc_train.append(100 * correct_train / total_train)
-        print("{} Epoch {}, loss {:.7f}, train accuracy {:.2f}%".format(
+        top1_err_train.append(100 * (1 - (top1s_train / total_train)))
+        top5_err_train.append(100 * (1 - (top5s_train / total_train)))
+        print("{} Epoch {}, loss {:.7f}, top 1 error {:.2f}%, top 5 error {:.2f}%".format(
             datetime.now(),
             epoch + 1,
             epoch_loss / data_length,
-            100 * correct_train / total_train))
-
-        # Validation
-        with torch.no_grad():
-            correct_valid = 0
-            total_valid = 0
-            top1s = 0
-            top5s = 0
-            for images, labels in valid_loader:
-                images = images.to(device=device)
-                labels = labels.to(device=device)
-                outputs = model(images)
-                _, predicted = torch.max(outputs.data, 1)
-                total_valid += labels.size(0)
-                correct_valid += (predicted == labels).sum().item()
-                top1s += find_top_k(outputs, labels, 1)
-                top5s += find_top_k(outputs, labels, 5)
-                del images, labels, outputs
-
-        acc_valid.append(100 * correct_valid / total_valid)
-        print('Validation accuracy: {}%, Top 1 error rate: {:.2f}%, Top 5 error rate: {:.2f}%'.format(
-            100 * correct_valid / total_valid,
-            100 * (1 - (top1s / total_valid)),
-            100 * (1 - (top5s / total_valid))))
+            100 * (1 - (top1s_train / total_train)),
+            100 * (1 - (top5s_train / total_train))))
 
     end_time = time.time()
 
-    # ----- print final training statistics ----- #
+    # # ----- print final training statistics ----- #
     hours, rem = divmod(end_time - start_time, 3600)
     minutes, seconds = divmod(rem, 60)
     total_time = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
     print("Total training time: {}, ".format(total_time))
     print("Final loss value: {}".format(loss_train[-1]))
-    print("Best validation accuracy: {}% on epoch {}".format(max(acc_valid), acc_valid.index(max(acc_valid)) + 1))
 
-    # save the decoder
-    torch.save(model.frontend.state_dict(), decoder_file)
+    # ----- Testing ----- #
+    with torch.no_grad():
+        correct = 0
+        total = 0
+        top1s = 0
+        top5s = 0
+        for images, labels in valid_loader:
+            images = images.to(device=device)
+            labels = labels.to(device=device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+            top1s += find_top_k(outputs, labels, 1)
+            top5s += find_top_k(outputs, labels, 5)
+            del images, labels, outputs
+
+    print('Testing accuracy: {}%, Top 1 error rate: {:.2f}%, Top 5 error rate: {:.2f}%'.format(
+        100 * correct / total,
+        100 * (1 - (top1s / total)),
+        100 * (1 - (top5s / total))))
+
+    # save the model weights
+    torch.save(model.frontend.state_dict(), decoder_file) # saving often fails, unsure why.
 
     # save loss plot and accuracy plot
     plt.figure(figsize=(14, 6))
@@ -162,11 +162,11 @@ if __name__ == '__main__':
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.subplot(1, 2, 2)
-    plt.plot(acc_train, label='training acc')
-    plt.plot(acc_valid, label='validation acc')
-    plt.title("Training and Validation Accuracy Graph")
+    plt.plot(top1_err_train, label='top 1')
+    plt.plot(top5_err_train, label='top 5')
+    plt.title("Training Error Rate Graph")
     plt.xlabel("epoch")
-    plt.ylabel("accuracy (%)")
+    plt.ylabel("error rate (%)")
     plt.legend(loc=1)
     plt.savefig(plot_file)
     plt.show()
