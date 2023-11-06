@@ -74,14 +74,13 @@ if __name__ == '__main__':
     # ----- initialize model and training parameters ----- #
     encoder = quicknet_modded.Architecture.backend
     decoder = quicknet_modded.Architecture.frontend
-    encoder.to(device=device)
-    decoder.to(device=device)
+    encoder.load_state_dict(torch.load(encoder_file, map_location=device))
     model = quicknet_modded.QuickNetMod(encoder, decoder)
     model.to(device=device)
     print('model loaded OK!')
 
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learn, weight_decay=5e-5)
+    optimizer = torch.optim.Adam(model.frontend.parameters(), lr=learn, weight_decay=5e-5)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, patience=5, verbose=True)
 
     # ----- begin training the model ----- #
@@ -156,7 +155,6 @@ if __name__ == '__main__':
     print("Best validation accuracy: {}% on epoch {}".format(max(acc_valid), acc_valid.index(max(acc_valid)) + 1))
 
     # save the model weights
-    torch.save(model.backend.state_dict(), encoder_file)
     torch.save(model.frontend.state_dict(), decoder_file)
 
     # save loss plot and accuracy plot

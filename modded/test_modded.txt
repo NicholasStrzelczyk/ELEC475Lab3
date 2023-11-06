@@ -1,1 +1,1 @@
-python3 test_modded.py -encoder_file ./blah -decoder_file ./decoder_modded.pth -b 50 -cuda y
+python3 test_modded.py -encoder_file ./encoder.pth -decoder_file ./decoder_modded.pth -b 50 -cuda y
