@@ -1,0 +1,1 @@
+python3 train_modded.py -encoder_file ./encoder_modded.pth -decoder_file ./decoder_modded.pth -plot_file ./plot_modded.png -learn 1e-4 -e 5 -b 50 -cuda y
