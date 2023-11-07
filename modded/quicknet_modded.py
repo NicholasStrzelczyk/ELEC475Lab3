@@ -2,48 +2,9 @@ import torch
 import torch.nn as nn
 
 
-class tell_me_shape(nn.Module):
-    def forward(self, x):
-        print(x.shape)
-
 class Flatten(nn.Module):
     def forward(self, x):
         return x.reshape(x.shape[0], -1)
-
-
-# class simple_resnext_block(nn.Module):
-#     def __init__(self, in_channels, cardinality, bwidth, stride=1):
-#         super(simple_resnext_block, self).__init__()
-#         self.expansion = 2
-#         out_channels = cardinality * bwidth
-#         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
-#         self.bn1 = nn.BatchNorm2d(out_channels)
-#         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, groups=cardinality, stride=stride, padding=1)
-#         self.bn2 = nn.BatchNorm2d(out_channels)
-#         self.conv3 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, stride=1, padding=0)
-#         self.bn3 = nn.BatchNorm2d(out_channels*self.expansion)
-#         self.relu = nn.ReLU()
-#
-#     def forward(self, x):
-#         identity = x
-#         x = self.conv1(x)
-#         x = self.bn1(x)
-#         x = self.relu(x)
-#         x = self.conv2(x)
-#         x = self.bn2(x)
-#         x = self.relu(x)
-#         x = self.conv3(x)
-#         x = self.bn3(x)
-#
-#         print(identity.shape)
-#         print(x.shape)
-#         x += identity
-#         x = self.relu(x)
-#         return x
-
-class tell_me_shape(nn.Module):
-    def forward(self, x):
-        print(x.shape)
 
 
 class ConvBlock(nn.Module):

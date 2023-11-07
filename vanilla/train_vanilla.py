@@ -152,7 +152,7 @@ if __name__ == '__main__':
         100 * (1 - (top5s / total))))
 
     # save the model weights
-    torch.save(model.frontend.state_dict(), decoder_file) # saving often fails, unsure why.
+    torch.save(model.frontend.state_dict(), decoder_file)
 
     # save loss plot and accuracy plot
     plt.figure(figsize=(14, 6))

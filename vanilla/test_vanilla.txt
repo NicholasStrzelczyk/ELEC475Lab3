@@ -1,1 +1,1 @@
-python3 test_vanilla.py -encoder_file ./encoder.pth -decoder_file ./decoder_vanilla.pth -b 50 -cuda y
+python3 test_vanilla.py -encoder_file ./encoder.pth -decoder_file ./decoder_vanilla.pth -b 25 -cuda y

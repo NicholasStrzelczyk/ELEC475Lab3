@@ -1,0 +1,36 @@
+Final Architecture Designs
+
+Common hyperparameters:
+	learn 1e-4 
+	epochs 15
+	batch size 25
+	loss_fn = nn.CrossEntropyLoss()
+	optimizer = Adam(model.parameters(), lr=learn, weight_decay=5e-5)
+	scheduler = ReduceLROnPlateau(optimizer=optimizer, patience=5, verbose=True)
+
+
+-- Vanilla --
+
+final loss=0.021542
+train time=00:05:25
+
+test acc=42.93%
+top1 error=57.07%
+top5 error=27.69%
+
+Total params=20,489,904
+Trainable params=16,984,164
+
+-- Modded --
+
+final loss=0.036905
+train time=00:53:47
+
+test acc=59.77%
+top1 error=40.23%
+top5 error=12.72%
+
+Total params=6,532,032
+Trainable params=3,026,292
+
+------------
